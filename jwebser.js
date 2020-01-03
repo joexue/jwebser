@@ -42,7 +42,12 @@ function run_file(res, file, query) {
     //console.log("CGI file: " + file);
     //console.log("query:");
     //console.log(query);
-    var out = require(webroot + file)(webroot, query);
+    var out
+    try {
+        out = require(webroot + file)(webroot, query);
+    } catch(e) {
+        out = "The URL is not right, check your URL"
+    }
     //console.log("out: " + out);
     res.write(out);
     res.end();
