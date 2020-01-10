@@ -2,6 +2,8 @@
  * jwebser -- A simple http server written by javascript run by nodejs
  *
  * Aug 2018, Joe Xue lgxue@hotmail.com
+ *
+ * Copyright (c) 2018-1020 by Joe Xue
  */
 
 /*
@@ -13,12 +15,11 @@
      }
    3 Javascript CGI file example
      module.exports = function(webroot, query) {
-         WEBROOT = webroot;
          if (query.action == 'DELETE') {
-             delete_record();
-        } else if(query.action == 'ADD') {
-             add_record(query);
-        }
+             //call your "DELETE" function here with the query parameters
+         } else if(query.action == 'ADD') {
+             //call your "ADD" function here with the query parameters
+         }
         return '<script> window.location.href = "index.html"</script>';
     };
  */
@@ -42,7 +43,7 @@ try {
 const port = conf.port  ? conf.port : DEFAULT_PORT;
 const webroot = conf.webroot ? conf.webroot : DEFAULT_ROOT;
 
-function run_file(res, file, query) {
+function executeFile(res, file, query) {
     //console.log("CGI file: " + file);
     //console.log("query:");
     //console.log(query);
@@ -57,7 +58,7 @@ function run_file(res, file, query) {
     res.end();
 }
 
-function send_file(res, file) {
+function sendFile(res, file) {
     fs.readFile(webroot + file, 'utf8', function(err, data) {
         if (err) {
             res.write("Cannot find the file: " + file);
@@ -80,9 +81,9 @@ function listener(req, res) {
     //console.log(req_data);
 
     if (req_data.query == null) {
-        send_file(res, file);
+        sendFile(res, file);
     } else {
-        run_file(res, file, url.parse(req.url, true).query);
+        executeFile(res, file, url.parse(req.url, true).query);
     }
 }
 
