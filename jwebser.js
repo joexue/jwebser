@@ -6,11 +6,11 @@
 
 /*
    1 Only GET is supported so far
-   2 Configuration file example, config.js
-     module.exports = {
-         webroot: '/var/webroot',
-         port: 8000
-     };
+   2 Configuration file example, config.json
+     {
+         "webroot": '/var/webroot',
+         "port": 8000
+     }
    3 Javascript CGI file example
      module.exports = function(webroot, query) {
          WEBROOT = webroot;
@@ -24,19 +24,23 @@
  */
 
 //Default values
-var DEFAULT_PAGE = '/index.html'
-var DEFAULT_ROOT = '/var/webroot'
-var DEFAULT_PORT = 8080
+const DEFAULT_PAGE = '/index.html'
+const DEFAULT_ROOT = '/var/webroot'
+const DEFAULT_PORT = 8080
 
-var http = require('http')
-var fs = require('fs');
-var url = require('url');
+const http = require('http')
+const fs = require('fs');
+const url = require('url');
 
 //Pickup the configuration
-var conf = require('./config');
+try {
+    const conf = JSON.parse(fs.readFileSync('./config.json'))
+} catch(e) {
+    console.log("No configuration file, use default values")
+}
 
-var port = conf.port  ? conf.port : DEFAULT_PORT;
-var webroot = conf.webroot ? conf.webroot : DEFAULT_ROOT;
+const port = conf.port  ? conf.port : DEFAULT_PORT;
+const webroot = conf.webroot ? conf.webroot : DEFAULT_ROOT;
 
 function run_file(res, file, query) {
     //console.log("CGI file: " + file);
