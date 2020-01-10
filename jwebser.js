@@ -3,7 +3,7 @@
  *
  * Aug 2018, Joe Xue lgxue@hotmail.com
  *
- * Copyright (c) 2018-1020 by Joe Xue
+ * Copyright (c) 2018-2020 by Joe Xue
  */
 
 /*
@@ -32,34 +32,26 @@ const DEFAULT_PORT = 8080
 const http = require('http')
 const fs = require('fs');
 const url = require('url');
+const querystring = require('querystring');
 
-//Pickup the configuration
-try {
-    const conf = JSON.parse(fs.readFileSync('./config.json'))
-} catch(e) {
-    console.log("No configuration file, use default values")
-}
-
-const port = conf.port  ? conf.port : DEFAULT_PORT;
-const webroot = conf.webroot ? conf.webroot : DEFAULT_ROOT;
+var cfg
 
 function executeFile(res, file, query) {
-    //console.log("CGI file: " + file);
-    //console.log("query:");
-    //console.log(query);
+    //console.log("CGI file: ", file);
+    //console.log("query:", query);
     var out
     try {
-        out = require(webroot + file)(webroot, query);
+        out = require(cfg.webroot + file)(cfg.webroot, query);
     } catch(e) {
         out = "The URL is not right, check your URL"
     }
-    //console.log("out: " + out);
+    //console.log("out: ",  out);
     res.write(out);
     res.end();
 }
 
 function sendFile(res, file) {
-    fs.readFile(webroot + file, 'utf8', function(err, data) {
+    fs.readFile(cfg.webroot + file, 'utf8', function(err, data) {
         if (err) {
             res.write("Cannot find the file: " + file);
         } else {
@@ -70,23 +62,44 @@ function sendFile(res, file) {
 }
 
 function listener(req, res) {
-    var file, req_data;
-
     res.writeHead(200, {'Content-Type': 'text/html'});
 
-    req_data = url.parse(req.url);
-    file = (req_data.pathname == '/') ? DEFAULT_PAGE : req_data.pathname;
+    const udata = url.parse(req.url);
+    const file = (udata.pathname == '/') ? DEFAULT_PAGE : udata.pathname;
 
-    //console.log("request the file:" + file);
-    //console.log(req_data);
+    //console.log("request the file: ", file);
+    //console.log(udata);
 
-    if (req_data.query == null) {
+    if (udata.query == null) {
         sendFile(res, file);
     } else {
-        executeFile(res, file, url.parse(req.url, true).query);
+        executeFile(res, file, querystring.parse(udata.query));
     }
 }
 
-var ser = http.createServer(listener);
+function loadConfig()
+{
+    var conf = {}
 
-ser.listen(port);
+    try {
+        conf = JSON.parse(fs.readFileSync('./config.json'))
+    } catch(e) {
+        console.log("No configuration file, use default values")
+    }
+
+    const port = conf.port  ? conf.port : DEFAULT_PORT;
+    const webroot = conf.webroot ? conf.webroot : DEFAULT_ROOT;
+    return {port, webroot}
+}
+
+function run()
+{
+    cfg = loadConfig()
+    const ser = http.createServer(listener);
+    ser.listen(cfg.port);
+}
+
+/*
+ * Start
+ */
+run()
